@@ -18,20 +18,26 @@ export const register = async (req, res) => {
 
 export const login = async (req, res) => {
   const { email, password } = req.body;
+        try {
+          let user = await User.findOne({ email });
 
-  let user = await User.findOne({ email });
+          if (!user)
+            return res.status(404).json({ message: "User not exist..!" });
 
-  if (!user) return res.status(404).json({ message: "User not exist..!" });
+          const validPassword = await bcrypt.compare(password, user.password);
 
-  const validPassword = await bcrypt.compare(password, user.password);
+          if (!validPassword)
+            return res.json({ message: "Invalid Credential.." });
 
-  if (!validPassword) return res.json({ message: "Invalid Credential.." });
+          const token = jwt.sign({ userId: user.id }, process.env.JWT, {
+            expiresIn: "1d",
+          });
 
-  const token = jwt.sign({ userId: user.id }, process.env.JWT, {
-    expiresIn: "1d",
-  });
-
-  res.status(200).json({ message: `Welcome ${user.name}`, token });
+          res.status(200).json({ message: `Welcome ${user.name}`, token });
+        } catch (error) {
+          res.json({message:'this is login error',error})
+        }
+  
 };
 
 export const getAllUsers = async (req, res) => {

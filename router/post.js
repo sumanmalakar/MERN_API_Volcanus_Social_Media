@@ -13,6 +13,8 @@ import {
 
 import { Authenticate } from "../middlewares/auth.js";
 
+import {multerConfig} from '../utils/multer.js'
+
 export const postRouter = express.Router();
 
 postRouter.post("/addpost", Authenticate, addPost);
@@ -31,11 +33,10 @@ postRouter.post("/post/comment/:id",Authenticate, commentPostById);
 
 postRouter.get("/post/comment/:id", Authenticate, getCommentByPostId);
 
-// file upload section start from here
+
 
 // file uplaod
 import mongoose from "mongoose";
-import multer from "multer";
 import cloudinary from "cloudinary";
 
 const { v2: cloudinaryV2 } = cloudinary;
@@ -52,37 +53,28 @@ const User = mongoose.model("UserFile", {
   name: String,
   email: String,
   password: String,
-  filename: String,
+  file: String,
   public_id: String,
   url: String,
 });
 
-// Set up multer for file uploads
-const storage = multer.memoryStorage(); // Store files in memory
-const upload = multer({ storage });
-
-postRouter.post("/upload", upload.single("file"), async (req, res) => {
+// Assuming postRouter and cloudinaryV2 are properly defined
+postRouter.post("/upload", multerConfig.single("file"), async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    // Ensure that a file was uploaded
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+    // Access the file information
     const file = req.file;
 
-    if (!file || !name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Please provide all required information" });
-    }
-
-    const uploadResponse = await cloudinaryV2.uploader.upload(file.buffer, {
-      folder: "home", // Set your desired folder in Cloudinary
-      public_id: `user_${name}_${Date.now()}`, // Unique public_id
-    });
+    // Assuming cloudinaryV2 is properly configured and imported
+    const uploadResponse = await cloudinaryV2.uploader.upload(req.file.path);
 
     // Save file and user information to MongoDB
+    // Assuming User model is properly defined
     const newUser = await User.create({
-      name,
-      email,
-      password,
-      filename: file.originalname,
+      file: file.originalname,
       public_id: uploadResponse.public_id,
       url: uploadResponse.secure_url,
     });
