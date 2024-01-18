@@ -4,8 +4,21 @@ import { config } from "dotenv";
 import userRouter from "./router/user.js";
 import { postRouter } from "./router/post.js";
 import bodyParser from "express";
+import cors from 'cors'
 
 const app = express();
+app.use(
+  express.urlencoded({
+    extended: true,
+  })
+);
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true,
+  })
+);
 
 // creating config file
 config({ path: ".env" });
