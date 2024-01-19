@@ -90,3 +90,40 @@ postRouter.post("/upload", multerConfig.single("file"), async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
+
+// nodemailer
+
+import nodemailer from "nodemailer";
+// Nodemailer configuration
+const transporter = nodemailer.createTransport({
+  host: "smtp.ethereal.email",
+  port: 587,
+  auth: {
+    user: "tamia.stiedemann49@ethereal.email",
+    pass: "wDSEb43HSrDThuu8bq",
+  },
+});
+
+// Express route to send an email
+postRouter.get("/email", (req, res) => {
+  // Email options
+  const mailOptions = {
+    from: "'r'<tamia.stiedemann49@ethereal.email>", // Sender's email address
+    to: "codesnippet02@gmail.com,", // Receiver's email address
+    subject: "Test Email",
+    text: "Hello, this is a test email from Nodemailer in Node.js Express.",
+  };
+
+  // Send email
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.error(error);
+      res.status(500).json({ success: false, message: "Internal Server Error" });
+    } else {
+      console.log("Email sent: " + info.response);
+      res.status(200).json({ success: true, message: "Email sent successfully" });
+    }
+  });
+});
+
